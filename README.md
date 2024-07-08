@@ -1,8 +1,14 @@
-# Mol2Lang-VLM
+<h1 align="center">Mol2Lang-VLM</h1>
+<p align="center"><a href="">Paper</a> (Update soon) | <a href="">HuggingFace Models</a>  (Update soon) | <a href="#checkpoints">Checkpoints</a></p>
+
 The official implementation of paper **"Mol2Lang-VLM: Vision- and Text-Guided Generative Pre-trained Language Models for Advancing Molecule Captioning through Multimodal Fusion"**
 
 ## Abstract
 > This paper introduces an enhanced method for refining generative pre-trained language models in molecule captioning by utilizing multimodal features to achieve more accurate caption generation. Our approach leverages the encoder and decoder blocks of the Transformer-based architecture by introducing third sub-layers into both of them. Specifically, we insert sub-layers in the encoder that fuse features from SELFIES strings and molecular images, while the decoder fuses features from SMILES strings and their corresponding descriptions. Performance evaluation on the CheBI-20 and L+M-24 benchmark datasets demonstrates the proposed model's superiority, achieving higher accuracy and quality in caption generation compared to existing methods.
+
+## News
+- Jul 07, 2024: Our paper is accepted as poster presentation at ACL 2024, see ya! 🎉
+- Jun 01, 2024: Submitted paper at [Language + Molecules @ ACL 2024 Workshop](https://language-plus-molecules.github.io)
 
 ## How to use
 
