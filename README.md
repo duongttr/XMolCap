@@ -63,10 +63,11 @@ python train.py --epochs 50 --batch_size 8 \
 
 ### 4. Evaluating model
 #### Checkpoints
-| Checkpoints on dataset| Download link |
+| Checkpoints | Download link |
 |---|---|
-|LPM-24|[OneDrive](https://1drv.ms/f/c/fa72f5f3c0e55162/Eu0ZV-wkkcJGuvdqKEH4xBcB5dOg_xoIWe7-aK-GTwWa_g?e=00RVcf)|
-|CheBI-20|[OneDrive](https://1drv.ms/f/c/fa72f5f3c0e55162/Eu0ZV-wkkcJGuvdqKEH4xBcB5dOg_xoIWe7-aK-GTwWa_g?e=00RVcf)|
+|LPM-24 (yes forget gate)|[OneDrive](https://1drv.ms/u/c/fa72f5f3c0e55162/Eb7TCUWZmI9Iv8nk3VQoV3EBRDTkl5kOYhMqMPunUw7nEg?e=FTnOvw)|
+|LPM-24 (no forget gate)|[OneDrive](https://1drv.ms/u/c/fa72f5f3c0e55162/EV0eMv_kMVpIoXpOyZhJk5EBafqdz1t1mNVTOPSB-z_EUg?e=OmrSYN)|
+|CheBI-20 (yes forget gate)|[OneDrive](https://1drv.ms/u/c/fa72f5f3c0e55162/ESx6gd_UvDZCtDkIsIHUKXMBruJmGjeGZwDDazqiFeSnpw?e=iWYy1M)|
 
 #### Evaluate on LPM-24
 ```zsh
