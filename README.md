@@ -1,5 +1,5 @@
 <h1 align="center">Mol2Lang-VLM</h1>
-<p align="center"><a href="">Paper</a> (Update soon) | <a href="">HuggingFace Models</a>  (Update soon) | <a href="#checkpoints">Checkpoints</a></p>
+<p align="center"><a href="https://aclanthology.org/2024.langmol-1.12/">📝 Paper</a> | <a href="#3-benchmark-datasets">🤗 Benchmark datasets (HuggingFace)</a> | <a href="#checkpoints">🚩 Checkpoints</a></p>
 
 The official implementation of paper **"Mol2Lang-VLM: Vision- and Text-Guided Generative Pre-trained Language Models for Advancing Molecule Captioning through Multimodal Fusion"**
 
@@ -86,7 +86,27 @@ python eval.py --dataset_name chebi-20
 ```
 
 ## Citation
-If you are interested, please cite to:
+If you are interested in my paper, please cite:
 ```
-
+@inproceedings{tran-etal-2024-mol2lang,
+    title = "{M}ol2{L}ang-{VLM}: Vision- and Text-Guided Generative Pre-trained Language Models for Advancing Molecule Captioning through Multimodal Fusion",
+    author = "Tran, Duong  and
+      Pham, Nhat Truong  and
+      Nguyen, Nguyen  and
+      Manavalan, Balachandran",
+    editor = "Edwards, Carl  and
+      Wang, Qingyun  and
+      Li, Manling  and
+      Zhao, Lawrence  and
+      Hope, Tom  and
+      Ji, Heng",
+    booktitle = "Proceedings of the 1st Workshop on Language + Molecules (L+M 2024)",
+    month = aug,
+    year = "2024",
+    address = "Bangkok, Thailand",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.langmol-1.12",
+    pages = "97--102",
+    abstract = "This paper introduces Mol2Lang-VLM, an enhanced method for refining generative pre-trained language models for molecule captioning using multimodal features to achieve more accurate caption generation. Our approach leverages the encoder and decoder blocks of the Transformer-based architecture by introducing third sub-layers into both. Specifically, we insert sub-layers in the encoder to fuse features from SELFIES strings and molecular images, while the decoder fuses features from SMILES strings and their corresponding descriptions. Moreover, cross multi-head attention is employed instead of common multi-head attention to enable the decoder to attend to the encoder{'}s output, thereby integrating the encoded contextual information for better and more accurate caption generation. Performance evaluation on the CheBI-20 and L+M-24 benchmark datasets demonstrates Mol2Lang-VLM{'}s superiority, achieving higher accuracy and quality in caption generation compared to existing methods. Our code and pre-processed data are available at https://github.com/nhattruongpham/mol-lang-bridge/tree/mol2lang/.",
+}
 ```
