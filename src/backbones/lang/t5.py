@@ -904,10 +904,12 @@ class T5Stack(T5PreTrainedModel):
                  n_attention_heads: int = 1,
                  use_visual_feature: bool = True,
                  use_smiles_feature: bool = True,
+                 use_graph_feature: bool = True,
                  use_forget_gate: bool = False,
                  visual_feature_dim: int = 1536,
                  text_feature_dim: int = 768,
                  smiles_feature_dim: int = 768,
+                 graph_feature_dim: int = 300,
                  intermidate_dim: int = 256,
                  fusion_encoder_layers: List = [],
                  fusion_decoder_layers: List = []
@@ -919,6 +921,7 @@ class T5Stack(T5PreTrainedModel):
         self.use_forget_gate = use_forget_gate
         self.use_visual_feature = use_visual_feature
         self.use_smiles_feature = use_smiles_feature
+        self.use_graph_feature = use_graph_feature
         self.fusion_encoder_layers = fusion_encoder_layers
         self.fusion_decoder_layers = fusion_decoder_layers
         
@@ -930,30 +933,50 @@ class T5Stack(T5PreTrainedModel):
                 self.visual_linear_q = nn.Linear(text_feature_dim, intermidate_dim)
                 
                 self.visual_text_multihead_attn = nn.MultiheadAttention(intermidate_dim, n_attention_heads)
-                self.visual_linear_q2q = nn.Linear(text_feature_dim + intermidate_dim, text_feature_dim)
-                
-                if use_forget_gate:
-                    self.visual_fg = nn.Linear(text_feature_dim + intermidate_dim, intermidate_dim)
-                    
-            self.intermediate_layer_norm = nn.LayerNorm(text_feature_dim)
-            self.fg_act = nn.Sigmoid()
-        else:
+            
             if use_smiles_feature:
                 self.smiles_linear_k = nn.Linear(smiles_feature_dim, intermidate_dim)
                 self.smiles_linear_v = nn.Linear(smiles_feature_dim, intermidate_dim)
-                self.smiles_linear_q = nn.Linear(text_feature_dim, intermidate_dim)
+                if use_visual_feature:
+                    self.smiles_linear_q = nn.Linear(intermidate_dim, intermidate_dim)
+                else:
+                    self.smiles_linear_q = nn.Linear(text_feature_dim, intermidate_dim)
                 
                 self.smiles_text_multihead_attn = nn.MultiheadAttention(intermidate_dim, n_attention_heads)
-                self.smiles_linear_q2q = nn.Linear(text_feature_dim + intermidate_dim, text_feature_dim)
+                    
+            if use_graph_feature:
+                self.graph_linear_k = nn.Linear(graph_feature_dim, intermidate_dim)
+                self.graph_linear_v = nn.Linear(graph_feature_dim, intermidate_dim)
+                if use_smiles_feature:
+                    self.graph_linear_q = nn.Linear(intermidate_dim, intermidate_dim)
+                else:
+                    self.graph_linear_q = nn.Linear(text_feature_dim, intermidate_dim)
                 
-                if use_forget_gate:
-                    self.smiles_fg = nn.Linear(text_feature_dim + intermidate_dim, intermidate_dim)
+                self.graph_text_multihead_attn = nn.MultiheadAttention(intermidate_dim, n_attention_heads)
+                
+            if use_forget_gate:
+                self.fg = nn.Linear(text_feature_dim + intermidate_dim, intermidate_dim)
             
-            if use_visual_feature and use_smiles_feature:
-                self.visual_smiles_text_fc = nn.Linear(text_feature_dim*2, text_feature_dim)
-            
+            self.linear_q2q = nn.Linear(text_feature_dim + intermidate_dim, text_feature_dim)
             self.intermediate_layer_norm = nn.LayerNorm(text_feature_dim)
             self.fg_act = nn.Sigmoid()
+        # else:
+            # if use_smiles_feature:
+            #     self.smiles_linear_k = nn.Linear(smiles_feature_dim, intermidate_dim)
+            #     self.smiles_linear_v = nn.Linear(smiles_feature_dim, intermidate_dim)
+            #     self.smiles_linear_q = nn.Linear(text_feature_dim, intermidate_dim)
+                
+            #     self.smiles_text_multihead_attn = nn.MultiheadAttention(intermidate_dim, n_attention_heads)
+            #     self.smiles_linear_q2q = nn.Linear(text_feature_dim + intermidate_dim, text_feature_dim)
+                
+            #     if use_forget_gate:
+            #         self.smiles_fg = nn.Linear(text_feature_dim + intermidate_dim, intermidate_dim)
+            
+            # if use_visual_feature and use_smiles_feature:
+            #     self.visual_smiles_text_fc = nn.Linear(text_feature_dim*2, text_feature_dim)
+            
+            # self.intermediate_layer_norm = nn.LayerNorm(text_feature_dim)
+            # self.fg_act = nn.Sigmoid()
                 
             
 
@@ -1037,7 +1060,9 @@ class T5Stack(T5PreTrainedModel):
         return_dict=None,
         image_features=None,
         smiles_features=None,
-        smiles_attention_mask=None
+        smiles_attention_mask=None,
+        graph_features=None,
+        graph_attention_mask=None
     ):
         # Model parallel
         if self.model_parallel:
@@ -1204,69 +1229,61 @@ class T5Stack(T5PreTrainedModel):
                         hidden_states = hidden_states.to("cuda:" + str(k + 1))
             
             if not self.is_decoder:
-                if self.use_visual_feature and i in self.fusion_encoder_layers:
-                    vt_K = self.visual_linear_k(image_features).transpose(0, 1)
-                    vt_V = self.visual_linear_v(image_features).transpose(0, 1)
-                    vt_Q = self.visual_linear_q(hidden_states).transpose(0, 1)
+                if i in self.fusion_encoder_layers:
+                    if self.use_visual_feature:
+                        vt_K = self.visual_linear_k(image_features).transpose(0, 1)
+                        vt_V = self.visual_linear_v(image_features).transpose(0, 1)
+                        vt_Q = self.visual_linear_q(hidden_states).transpose(0, 1)
+                        
+                        vt_attn_output, _ = self.visual_text_multihead_attn(vt_Q, vt_K, vt_V)
+                        attn_output = vt_attn_output.transpose(0, 1)
                     
-                    vt_attn_output, _ = self.visual_text_multihead_attn(vt_Q, vt_K, vt_V)
-                    vt_attn_output = vt_attn_output.transpose(0, 1)
+                    if self.use_smiles_feature:
+                        st_K = self.smiles_linear_k(smiles_features).transpose(0, 1)
+                        st_V = self.smiles_linear_v(smiles_features).transpose(0, 1)
+                        if self.use_visual_feature:
+                            st_Q = self.smiles_linear_q(attn_output).transpose(0, 1)
+                        else:
+                            st_Q = self.smiles_linear_q(hidden_states).transpose(0, 1)
+                        
+                        st_attn_output, _ = self.smiles_text_multihead_attn(st_Q, st_K, st_V, key_padding_mask=(smiles_attention_mask != 1))
+                        if self.use_visual_feature:
+                            st_attn_output = st_attn_output + vt_attn_output # Residual
+                        attn_output = st_attn_output.transpose(0, 1)
+                    
+                    if self.use_graph_feature:
+                        gt_K = self.graph_linear_k(graph_features).transpose(0, 1)
+                        gt_V = self.graph_linear_v(graph_features).transpose(0, 1)
+                        
+                        if self.use_smiles_feature:
+                            gt_Q = self.graph_linear_q(attn_output).transpose(0, 1)
+                        else:
+                            gt_Q = self.graph_linear_q(hidden_states).transpose(0, 1)
+                        
+                        gt_attn_output, _ = self.graph_text_multihead_attn(gt_Q, gt_K, gt_V, key_padding_mask=(graph_attention_mask != 1))
+                        if self.use_smiles_feature:
+                            gt_attn_output = gt_attn_output + st_attn_output # Residual
+                        attn_output = gt_attn_output.transpose(0, 1)
+                            
+                    
+                    ###
                     if self.use_forget_gate:
-                        vt_forget_mask = self.visual_fg(torch.cat((vt_attn_output, hidden_states), 2))
-                        vt_forget_mask = self.fg_act(vt_forget_mask)
-                        vt_forget_mask = self.dropout(vt_forget_mask)
-                        vt_attn_output = vt_forget_mask.mul(vt_attn_output)
-                    vt_output = self.visual_linear_q2q(torch.cat((hidden_states, vt_attn_output), 2))
+                        forget_mask = self.fg(torch.cat((attn_output, hidden_states), 2))
+                        forget_mask = self.fg_act(forget_mask)
+                        forget_mask = self.dropout(forget_mask)
+                        attn_output = forget_mask.mul(attn_output)
+                    ###
                     
-                    vt_output = self.dropout(vt_output)
+                    fused_output = self.linear_q2q(torch.cat((attn_output, hidden_states), 2))
+                    fused_output = self.dropout(fused_output)
                     
                     # Residual
-                    hidden_states = hidden_states + vt_output
-                    
-                    # hidden_states = self.intermediate_layer_norm(vt_hidden_states)
-            else:
-                if self.use_smiles_feature and i in self.fusion_decoder_layers:
-                    st_K = self.smiles_linear_k(smiles_features).transpose(0, 1)
-                    st_V = self.smiles_linear_v(smiles_features).transpose(0, 1)
-                    st_Q = self.smiles_linear_q(hidden_states).transpose(0, 1)
-                    
-                    st_attn_output, _ = self.smiles_text_multihead_attn(st_Q, st_K, st_V, key_padding_mask=(smiles_attention_mask != 1))
-                    st_attn_output = st_attn_output.transpose(0, 1)
-                    if self.use_forget_gate:
-                        st_forget_mask = self.smiles_fg(torch.cat((st_attn_output, hidden_states), 2))
-                        st_forget_mask = self.fg_act(st_forget_mask)
-                        st_forget_mask = self.dropout(st_forget_mask)
-                        st_attn_output = st_forget_mask.mul(st_attn_output)
-                    st_output = self.smiles_linear_q2q(torch.cat((hidden_states, st_attn_output), 2))
-                    
-                    st_output = self.dropout(st_output)
-                    
-                    # Residual
-                    hidden_states = hidden_states + st_output
-                    
-                    # hidden_states = self.intermediate_layer_norm(st_hidden_states)
-                
-                # # Gated Multimodal Unit
-                # if self.use_smiles_feature and self.use_visual_feature:
-                #     vt_h = torch.tanh(vt_hidden_states)
-                #     st_h = torch.tanh(st_hidden_states)
-                #     svt_z = self.visual_smiles_text_fc(
-                #         torch.concat([vt_hidden_states, st_hidden_states], dim=-1)
-                #     )
-                #     svt_z = torch.softmax(svt_z, dim=-1)
-                #     svt_hidden_states = svt_z * vt_h + (1-svt_z) * st_h
-                    
-                # elif self.use_smiles_feature and not self.use_visual_feature:
-                #     hidden_states = self.intermediate_layer_norm(st_hidden_states)
-                # elif self.use_smiles_feature and self.use_visual_feature:
-                #     hidden_states = self.intermediate_layer_norm(svt_hidden_states)
+                    hidden_states = hidden_states + fused_output
         
 
         hidden_states = self.final_layer_norm(hidden_states)
         hidden_states = self.dropout(hidden_states)
 
-        # Add text-image fusion layer
-        
         # Add last layer
         if output_hidden_states:
             all_hidden_states = all_hidden_states + (hidden_states,)
@@ -2509,10 +2526,12 @@ class T5ForMultimodalConditionalGeneration(T5PreTrainedModel):
                        n_attention_heads: int = 1,
                        use_visual_feature: bool = True,
                        use_smiles_feature: bool = True,
+                       use_graph_feature: bool = True,
                        use_forget_gate: bool = False,
                        visual_feature_dim: int = 1536,
                        text_feature_dim: int = 768,
                        smiles_feature_dim: int = 768,
+                       graph_feature_dim: int = 300,
                        intermidate_dim: int = 256,
                        fusion_encoder_layers: List = [],
                        fusion_decoder_layers: List = []):
@@ -2529,10 +2548,12 @@ class T5ForMultimodalConditionalGeneration(T5PreTrainedModel):
                                n_attention_heads=n_attention_heads, 
                                use_visual_feature=use_visual_feature,
                                use_smiles_feature=use_smiles_feature,
+                               use_graph_feature=use_graph_feature,
                                use_forget_gate=use_forget_gate, 
                                visual_feature_dim=visual_feature_dim, 
                                text_feature_dim=text_feature_dim,
                                smiles_feature_dim=smiles_feature_dim,
+                               graph_feature_dim=graph_feature_dim,
                                intermidate_dim=intermidate_dim,
                                fusion_encoder_layers=fusion_encoder_layers,
                                fusion_decoder_layers=fusion_decoder_layers)
@@ -2545,10 +2566,12 @@ class T5ForMultimodalConditionalGeneration(T5PreTrainedModel):
                                n_attention_heads=n_attention_heads, 
                                use_visual_feature=use_visual_feature,
                                use_smiles_feature=use_smiles_feature,
+                               use_graph_feature=use_graph_feature,
                                use_forget_gate=use_forget_gate, 
                                visual_feature_dim=visual_feature_dim, 
                                text_feature_dim=text_feature_dim,
                                smiles_feature_dim=smiles_feature_dim,
+                               graph_feature_dim=graph_feature_dim,
                                intermidate_dim=intermidate_dim,
                                fusion_encoder_layers=fusion_encoder_layers,
                                fusion_decoder_layers=fusion_decoder_layers)
@@ -2644,7 +2667,9 @@ class T5ForMultimodalConditionalGeneration(T5PreTrainedModel):
         return_dict: Optional[bool] = None,
         image_features: Optional[torch.FloatTensor] = None,
         smiles_features: Optional[torch.FloatTensor] = None,
-        smiles_attention_mask: Optional[torch.FloatTensor] = None
+        smiles_attention_mask: Optional[torch.FloatTensor] = None,
+        graph_features: Optional[torch.FloatTensor] = None,
+        graph_attention_mask: Optional[torch.FloatTensor] = None
     ) -> Union[Tuple[torch.FloatTensor], Seq2SeqLMOutput]:
         r"""
         labels (`torch.LongTensor` of shape `(batch_size,)`, *optional*):
@@ -2699,7 +2724,9 @@ class T5ForMultimodalConditionalGeneration(T5PreTrainedModel):
                 return_dict=return_dict,
                 image_features=image_features,
                 smiles_features=smiles_features,
-                smiles_attention_mask=smiles_attention_mask
+                smiles_attention_mask=smiles_attention_mask,
+                graph_features=graph_features,
+                graph_attention_mask=graph_attention_mask
             )
         elif return_dict and not isinstance(encoder_outputs, BaseModelOutput):
             encoder_outputs = BaseModelOutput(
@@ -2744,7 +2771,9 @@ class T5ForMultimodalConditionalGeneration(T5PreTrainedModel):
             return_dict=return_dict,
             image_features=image_features,
             smiles_features=smiles_features,
-            smiles_attention_mask=smiles_attention_mask
+            smiles_attention_mask=smiles_attention_mask,
+            graph_features=graph_features,
+            graph_attention_mask=graph_attention_mask
         )
 
         sequence_output = decoder_outputs[0]
@@ -2824,7 +2853,9 @@ class T5ForMultimodalConditionalGeneration(T5PreTrainedModel):
             "use_cache": use_cache,
             "image_features": kwargs["image_features"],
             "smiles_features": kwargs["smiles_features"],
-            "smiles_attention_mask": kwargs["smiles_attention_mask"]
+            "smiles_attention_mask": kwargs["smiles_attention_mask"],
+            "graph_features": kwargs["graph_features"],
+            "graph_attention_mask": kwargs["graph_attention_mask"]
         }
 
     def prepare_decoder_input_ids_from_labels(self, labels: torch.Tensor):

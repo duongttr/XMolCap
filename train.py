@@ -25,7 +25,7 @@ def main(args):
         raise Exception('Dataset name is invalid, please choose one in two: lpm-24, chebi-20')
     
     train_dataloader = get_dataloaders(args, tokenizer, batch_size=args.batch_size, num_workers=args.num_workers, split='train')
-    val_dataloader = get_dataloaders(args, tokenizer, batch_size=args.batch_size, num_workers=args.num_workers, split='validation')
+    val_dataloader = get_dataloaders(args, tokenizer, batch_size=args.batch_size, num_workers=args.num_workers, split='test')
     
     args.train_data_len = len(train_dataloader) // args.grad_accum
     args.tokenizer = Namespace()
@@ -38,8 +38,8 @@ def main(args):
 
     on_best_eval_loss_callback = ModelCheckpoint(
         dirpath=args.output_folder,
-        filename='ckpt_{eval_loss}',
-        save_top_k=3,
+        filename='ckpt_{epoch}_{eval_loss}',
+        save_top_k=20,
         verbose=True,
         monitor='eval_loss',
         mode='min'
@@ -55,6 +55,7 @@ def main(args):
         callbacks=[on_best_eval_loss_callback, lr_monitor],
         max_epochs=args.epochs,
         accelerator='cuda' if args.cuda else 'cpu',
+        strategy='ddp_find_unused_parameters_true' if args.num_devices > 1 else 'auto',
         devices=args.num_devices,
         precision=args.precision, # 32 if has more vram
         gradient_clip_val=10.0,

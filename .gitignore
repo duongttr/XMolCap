@@ -9,6 +9,16 @@ src/metric_evaluator/ckpts
 login.py
 src/mim_pretraining.py
 .DS_Store
+ckpt_store/
+image_explain/
+mol2lang/
+results/
+sample_explain/
+explainable.ipynb
+infer.py
+lightning_module_test.py
+weights/
+t5_test.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

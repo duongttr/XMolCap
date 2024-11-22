@@ -25,11 +25,11 @@ class Mol2Text_translation:
                 nhid=600,
                 nout=300,
                 model_name_or_path=text_model,
-                cid2smiles_path=os.path.join(os.path.dirname(__file__), 'assets', 'cid_to_smiles.pkl'),
-                cid2vec_path=os.path.join(os.path.dirname(__file__), 'assets', 'test.txt')
+                cid2smiles_path=os.path.join(os.path.dirname(__file__), 'ckpts', 'cid_to_smiles.pkl'),
+                cid2vec_path=os.path.join(os.path.dirname(__file__), 'ckpts', 'test.txt')
             )
             self.device = torch.device(device)
-            self.text2mol_model.load_state_dict(torch.load(os.path.join(os.path.dirname(__file__), 'assets', 'test_outputfinal_weights.320.pt'),
+            self.text2mol_model.load_state_dict(torch.load(os.path.join(os.path.dirname(__file__), 'ckpts', 'test_outputfinal_weights.320.pt'),
                                                         map_location=self.device), strict=False)
             self.text2mol_model.to(self.device)
         

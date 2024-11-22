@@ -19,13 +19,13 @@ def main(args):
     tokenizer.add_tokens(['α', 'β', 'γ', '<boc>', '<eoc>'])
     
     if args.dataset_name == 'lpm-24':
-        args.dataset_name_or_path = 'ndhieunguyen/LPM-24'
+        args.dataset_name_or_path = 'duongttr/LPM-24-extend'
     elif args.dataset_name == 'chebi-20':
         args.dataset_name_or_path = 'duongttr/chebi-20-new'
     else:
         raise Exception('Dataset name is invalid, please choose one in two: lpm-24, chebi-20')
     
-    val_dataloader = get_dataloaders(args, tokenizer, batch_size=args.batch_size, num_workers=4, split='validation')
+    val_dataloader = get_dataloaders(args, tokenizer, batch_size=args.batch_size, num_workers=4, split=args.split)
     
     args.tokenizer = Namespace()
     args.tokenizer.pad_token_id = tokenizer.pad_token_id
@@ -48,9 +48,19 @@ def main(args):
         writer.writeheader()
         
         for idx, batch in enumerate(tqdm(val_dataloader)):
-            batch = {k:v.to('cuda') if isinstance(v, torch.Tensor) else v for k,v in batch.items()}
+            for k, v in batch.items():
+                try:
+                    batch[k] = batch[k].to('cuda')
+                except:
+                    pass
+            # batch = {k:v.to('cuda') if isinstance(v, torch.Tensor) or isinstance(v, ) else v for k,v in batch.items()}
             pred_captions = model.generate_captioning(batch, decoder_start_token_id=0)
             gt_captions = batch['caption']
+            
+            for p, g in zip(pred_captions, gt_captions):
+                print(p)
+                print(g)
+                print('-'*50)
             
             ALL_GT.extend(gt_captions)
             ALL_PRED.extend(pred_captions)
@@ -64,7 +74,7 @@ def main(args):
         
     metrics_result = evaluator(ALL_PRED, ALL_GT)
     for k, v in metrics_result.items():
-        print(f'{k}: {v}')    
+        print(f'{k}: {v}')
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -75,6 +85,7 @@ if __name__ == "__main__":
     parser.add_argument('--output_csv', type=str, default='results/output.csv')
     parser.add_argument('--batch_size', type=int, default=8)
     parser.add_argument('--cuda', action='store_true')
+    parser.add_argument('--split', type=str, default='validation')
     
     args = parser.parse_args()
     
