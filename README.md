@@ -1,5 +1,5 @@
 <h1 align="center">XMolCap</h1>
-<p align="center"><a href="https://aclanthology.org/2024.langmol-1.12/">📝 Paper</a> | <a href="#3-benchmark-datasets">🤗 Benchmark datasets</a> | <a href="">🚩 Checkpoints</a> | <a href="">🤗 Demo</a></p>
+<p align="center"><a href="">📝 Paper</a> | <a href="#3-benchmark-datasets">🤗 Benchmark datasets</a> | <a href="">🚩 Checkpoints</a> | <a href="">🤗 Demo</a></p>
 
 The official implementation of manuscript **"XMolCap: Advancing Molecular Captioning  through Multimodal Fusion and Explainable Graph Neural Networks"**
 
