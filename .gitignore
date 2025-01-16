@@ -15,10 +15,13 @@ mol2lang/
 results/
 sample_explain/
 explainable.ipynb
+new_explainable.ipynb
 infer.py
 lightning_module_test.py
 weights/
 t5_test.py
+.conda
+.gradio
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

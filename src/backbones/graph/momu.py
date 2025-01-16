@@ -30,7 +30,7 @@ class MoMu(nn.Module):
             JK='last'
         )
         
-        state_dict = torch.load(config['pretrained_model_path'], weights_only=True)
+        state_dict = torch.load(config['pretrained_model_path'], map_location=device)
         self.graph_encoder.load_state_dict(state_dict)
 
     def encode_structure(self, structure, proj=False):

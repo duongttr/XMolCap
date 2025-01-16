@@ -11,6 +11,12 @@ The official implementation of manuscript **"XMolCap: Advancing Molecular Captio
 ## How to use
 
 ### 1. Environment preparation
+Create an environment using Miniconda or Conda:
+```zsh
+conda create -n XMolCap python=3.10
+conda activate XMolCap
+```
+
 After cloning the repo, run the following command to install required packages:
 ```zsh
 # installing pytorch, recommend vervion 2.1.2 or above
@@ -18,6 +24,9 @@ pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https
 
 # installing additional packages
 pip install -r requirements.txt
+
+# install additional packages for Torch Geometric
+pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.1.2+cu121.html
 ```
 
 ### 2. Pretrained models

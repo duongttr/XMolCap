@@ -1,5 +1,5 @@
 t5:
-  pretrained_model_name_or_path: 'QizhiPei/biot5-plus-base'
+  pretrained_model_name_or_path: 'QizhiPei/biot5-plus-large'
 swin:
   img_size: [224, 224]
   num_classes: 0
@@ -36,7 +36,7 @@ multimodal:
   trainable_graph: false
   use_forget_gate: true
   visual_feature_dim: 1536
-  text_feature_dim: 768
+  text_feature_dim: 1024
   smiles_feature_dim: 768
   graph_feature_dim: 300
-  intermediate_dim: 256
+  intermediate_dim: 384

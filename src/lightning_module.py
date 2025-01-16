@@ -11,7 +11,7 @@ class T5MultimodalModel(pl.LightningModule):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # Initialize multimodal text-based model
         self.t5_model = T5ForMultimodalConditionalGeneration.from_pretrained(
             args.t5.pretrained_model_name_or_path,
@@ -40,7 +40,7 @@ class T5MultimodalModel(pl.LightningModule):
             )
         
             self.swin_model.load_state_dict(
-                torch.load(args.swin.pretrained_model_path)['encoder']
+                torch.load(args.swin.pretrained_model_path, map_location=device)['encoder']
             )
 
             if not args.multimodal.trainable_visual:
@@ -225,6 +225,8 @@ class T5MultimodalModel(pl.LightningModule):
     def generate_captioning(self, inputs,
                             max_length = 512,
                             num_beams= 1,
+                            do_sample=False,
+                            temperature=1.0,
                             decoder_start_token_id=0,
                             eos_token_id=1,
                             pad_token_id=0):
@@ -240,6 +242,8 @@ class T5MultimodalModel(pl.LightningModule):
             decoder_start_token_id=decoder_start_token_id,
             max_length=max_length,
             num_beams=num_beams,
+            do_sample=do_sample,
+            temperature=temperature,
             eos_token_id=eos_token_id,
             pad_token_id=pad_token_id
         )
