@@ -4,9 +4,10 @@
 The official implementation of manuscript **"XMolCap: Advancing Molecular Captioning  through Multimodal Fusion and Explainable Graph Neural Networks"**
 
 ## Abstract
-> 
+> Update soon!
 
 ## News
+- `2024.12.03`: Manuscript was submitted to IEEE Journal of Biomedical and Health Informatics (IEEE JBHI) 
 
 ## How to use
 
