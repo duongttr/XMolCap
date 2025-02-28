@@ -4,6 +4,10 @@ import yaml
 from argparse import Namespace
 import gradio as gr
 import app_config
+import os
+
+# Set CUDA_VISIBLE_DEVICES to -1 to disable GPU
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 # Define two models for molecule captioning
 def define_model(model_config_path, ckpt_path):
@@ -38,38 +42,88 @@ def molecule_captioning(model, molecule_strings, batch_size, num_beams, do_sampl
 
 # Define input components: molecule_strings (list), num_beams, do_sample, temperature
 with gr.Blocks() as demo:
-    gr.Markdown("# XMolCap: Advancing Molecular Captioning through Multimodal Fusion and Explainable Graph Neural Networks")
-
-    molecule_input = gr.Textbox(label="Molecule Strings (newline-separated)",
-                                placeholder="Enter each molecule string on a new line",
-                                lines=5)
-    num_beams_input = gr.Slider(minimum=1, maximum=10, step=1, label="Number of Beams (Number of hypotheses generated at each step)", value=1)
-    do_sample_input = gr.Checkbox(label="Do Sample (Enable sampling for more diverse outputs)", value=False)
-    temperature_input = gr.Slider(minimum=0.1, maximum=2.0, step=0.1, label="Temperature (Controls randomness of sampling: higher values mean more random)", value=1.0)
-    batch_size_input = gr.Slider(minimum=1, maximum=10, step=1, label="Batch Size (Number of molecules processed in parallel)", value=4)
+    gr.Markdown(app_config.TITLE)
     
-    model_selector = gr.Dropdown(choices=["Trained on L+M-24", "Trained on CheBI-20"], label="Select Model", value="Trained on L+M-24")
-    output = gr.Dataframe(headers=["Molecule String", "Generated Caption"], row_count=5, type="array", wrap=True)
+    with gr.Row():
+        with gr.Column():
+            gr.Button(
+                app_config.EXTENSIVE_INFO.paper_info.label,
+                link=app_config.EXTENSIVE_INFO.paper_info.link,
+                size="md"
+            ).click(
+                lambda _: gr.Info(app_config.EXTENSIVE_INFO.paper_info.action_text)
+            )
+        with gr.Column():
+            gr.Button(
+                app_config.EXTENSIVE_INFO.github_info.label,
+                link=app_config.EXTENSIVE_INFO.github_info.link,
+                size="md"
+            ).click(
+                lambda _: gr.Info(app_config.EXTENSIVE_INFO.github_info.action_text)
+            )
+        with gr.Column():
+            gr.Button(
+                app_config.EXTENSIVE_INFO.webserver_info.label,
+                link=app_config.EXTENSIVE_INFO.webserver_info.link,
+                size="md"
+            ).click(
+                lambda _: gr.Info(app_config.EXTENSIVE_INFO.webserver_info.action_text)
+            )
+    
+    gr.Markdown("### Inputs")
+    with gr.Row(equal_height=True):
+        with gr.Column():
+            molecule_input = gr.Textbox(label=app_config.OPTS.molecule_input.label,
+                                placeholder=app_config.OPTS.molecule_input.placeholder,
+                                lines=app_config.OPTS.molecule_input.lines)
+            model_selector = gr.Dropdown(choices=app_config.OPTS.model_selector.choices, 
+                                 label=app_config.OPTS.model_selector.label, 
+                                 value=app_config.OPTS.model_selector.value)
+            gr.Examples(app_config.EXAMPLES.examples,
+                        inputs=[molecule_input, model_selector],
+                        label=app_config.EXAMPLES.label)
+            
+        with gr.Column():
+            do_sample_input = gr.Checkbox(label=app_config.OPTS.do_sample_input.label, 
+                                          value=app_config.OPTS.do_sample_input.value)
+            num_beams_input = gr.Slider(minimum=app_config.OPTS.num_beams_input.minimum, 
+                                        maximum=app_config.OPTS.num_beams_input.maximum, 
+                                        step=app_config.OPTS.num_beams_input.step, 
+                                        label=app_config.OPTS.num_beams_input.label, 
+                                        value=app_config.OPTS.num_beams_input.value)
+            temperature_input = gr.Slider(minimum=app_config.OPTS.temperature_input.minimum, 
+                                          maximum=app_config.OPTS.temperature_input.maximum, 
+                                          step=app_config.OPTS.temperature_input.step, 
+                                          label=app_config.OPTS.temperature_input.label, 
+                                          value=app_config.OPTS.temperature_input.value)
+            batch_size_input = gr.Slider(minimum=app_config.OPTS.batch_size_input.minimum, 
+                                         maximum=app_config.OPTS.batch_size_input.maximum, 
+                                         step=app_config.OPTS.batch_size_input.step, 
+                                         label=app_config.OPTS.batch_size_input.label, 
+                                         value=app_config.OPTS.batch_size_input.value)
+            submit_button = gr.Button(app_config.OPTS.submit_button.label, variant=app_config.OPTS.submit_button.variant)
+    
+    gr.Markdown("### Outputs")
+    output = gr.Dataframe(headers=app_config.OPTS.dataframe_output.headers, 
+                          row_count=app_config.OPTS.dataframe_output.row_count, 
+                          type=app_config.OPTS.dataframe_output.type, 
+                          wrap=app_config.OPTS.dataframe_output.wrap)
 
     def process_inputs(molecule_input, batch_size, num_beams, do_sample, temperature, model_choice):
         molecule_list = [mol.strip() for mol in molecule_input.split('\n') if mol.strip()]
-        if model_choice == "Trained on L+M-24":
+        if len(molecule_list) > app_config.SEQUENCE_LIMIT:
+            return gr.Warning(f"Please enter at most {app_config.SEQUENCE_LIMIT} sequences.")
+            
+        if model_choice == app_config.MODEL_CHOICES[0]:
             results = molecule_captioning(lpm24_model, molecule_list, batch_size, num_beams, do_sample, temperature)
         else:
             results = molecule_captioning(chebi20_model, molecule_list, batch_size, num_beams, do_sample, temperature)
         return [[mol, cap] for mol, cap in zip(molecule_list, results)]
-    
-    submit_button = gr.Button("Generate Captions")
-
-    gr.Examples([
-        ["COP(=O)(OC)OC(C)=CC(=O)N(C)C\nCC(O)C(=O)N1CCC(C=O)CC1\nCN1C(=O)[N+](c2cncnc2)(C(C)(C)C)CC1C(=O)[O-]", "Trained on L+M-24"],
-        ["COC1=CC(=CC(=C1O)OC)C(=O)OC2=CC(=CC(=C2CC(=O)OC)O)O\nC(CC(=O)N)C(C(=O)O)O\nC1=CC(=CC=C1NC(=O)CCN)[N+](=O)[O-]", "Trained on CheBI-20"]
-    ],
-    inputs=[molecule_input, model_selector],
-    outputs=output,
-    label="Example Molecule Strings")
 
     submit_button.click(process_inputs, [molecule_input, batch_size_input, num_beams_input, do_sample_input, temperature_input, model_selector], output)
+    
+    # Add a markdown to citation
+    gr.Markdown(app_config.CITATION)
 
 # Launch the application
 demo.launch(share=True)

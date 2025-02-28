@@ -22,6 +22,9 @@ weights/
 t5_test.py
 .conda
 .gradio
+test_xmolcap/
+checkpoints/
+conda_env/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
