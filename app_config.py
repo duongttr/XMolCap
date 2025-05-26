@@ -98,6 +98,15 @@ CITATION = """
 ### Citation
 If you are interested in this work, please cite the following paper:
 ```
-Update soon!
+@ARTICLE{11012653,
+  author={Tran, Duong Thanh and Nguyen, Nguyen Doan Hieu and Pham, Nhat Truong and Rakkiyappan, Rajan and Karki, Rajendra and Manavalan, Balachandran},
+  journal={IEEE Journal of Biomedical and Health Informatics}, 
+  title={XMolCap: Advancing Molecular Captioning through Multimodal Fusion and Explainable Graph Neural Networks}, 
+  year={2025},
+  volume={},
+  number={},
+  pages={1-12},
+  keywords={Biological system modeling;Feature extraction;Chemicals;Bioinformatics;Accuracy;Training;Data models;Data mining;Transformers;Encoding;Explainable artificial intelligence;graph neural networks;language and molecules;large language models;molecular captioning;model interpretation;multimodal fusion},
+  doi={10.1109/JBHI.2025.3572910}}
 ```
 """

@@ -1,13 +1,17 @@
 <h1 align="center">XMolCap</h1>
-<p align="center"><a href="">📝 Paper</a> | <a href="#3-benchmark-datasets">🤗 Benchmark datasets</a> | <a href="https://1drv.ms/f/c/fa72f5f3c0e55162/EhdZirq68n5IpLsXZfioaJEBZCv7gJD0zqtQuG6RVL23rQ?e=hEx9lg">🚩 Checkpoints</a> | <a href="">🤗 Demo</a></p>
+<p align="center"><a href="https://doi.org/10.1109/JBHI.2025.3572910">📝 Paper</a> | <a href="#3-benchmark-datasets">🤗 Benchmark datasets</a> | <a href="https://1drv.ms/f/c/fa72f5f3c0e55162/EhdZirq68n5IpLsXZfioaJEBZCv7gJD0zqtQuG6RVL23rQ?e=hEx9lg">🚩 Checkpoints</a> | <a href="#5-application">⚙️ Application</a> | <a href="#citation">📚 Cite our paper!</a></p>
 
-The official implementation of manuscript **"XMolCap: Advancing Molecular Captioning  through Multimodal Fusion and Explainable Graph Neural Networks"**
+The official implementation of manuscript **"XMolCap: Advancing Molecular Captioning through Multimodal Fusion and Explainable Graph Neural Networks"**
 
 ## Abstract
-> Update soon!
+> Large language models (LLMs) have significantly advanced computational biology by enabling the integration of molecular, protein, and natural language data to accelerate drug discovery. However, existing molecular captioning approaches often underutilize diverse molecular modalities and lack interpretability. In this study, we introduce XMolCap, a novel explainable molecular captioning framework that integrates molecular images, SMILES strings, and graph-based structures through a stacked multimodal fusion mechanism. The framework is built upon a BioT5-based encoder-decoder architecture, which serves as the backbone for extracting feature representations from SELFIES. By leveraging specialized models such as SwinOCSR, SciBERT, and GIN-MoMu, XMolCap effectively captures complementary information from each modality. Our model not only achieves state-of-the-art performance on two benchmark datasets (L+M-24 and ChEBI-20), outperforming several strong baselines, but also provides detailed, functional group-aware, and property-specific explanations through graph-based interpretation. XMolCap is publicly available at https://github.com/cbbl-skku-org/XMolCap/ for reproducibility and local deployment. We believe it holds strong potential for clinical and pharmaceutical applications by generating accurate, interpretable molecular descriptions that deepen our understanding of molecular properties and interactions.
+
+![architecture](./assets/architecture.png)
 
 ## News
-- `2024.12.03`: Manuscript was submitted to IEEE Journal of Biomedical and Health Informatics (IEEE JBHI)
+- `2025.05.16`: Happy to announce that our manuscript was accepted 🎉🎉🎉 (DOI: [10.1109/JBHI.2025.3572910](https://doi.org/10.1109/JBHI.2025.3572910)).
+- `2025.02.14`: XMolCap was considered for major revision.
+- `2024.12.03`: Manuscript was submitted to IEEE Journal of Biomedical and Health Informatics (IEEE JBHI).
 
 ## How to use
 
@@ -116,4 +120,14 @@ The terminal will provide a local URL for testing and a public URL for global sh
 ## Citation
 If you are interested in my paper, please cite:
 ```
+@ARTICLE{11012653,
+  author={Tran, Duong Thanh and Nguyen, Nguyen Doan Hieu and Pham, Nhat Truong and Rakkiyappan, Rajan and Karki, Rajendra and Manavalan, Balachandran},
+  journal={IEEE Journal of Biomedical and Health Informatics}, 
+  title={XMolCap: Advancing Molecular Captioning through Multimodal Fusion and Explainable Graph Neural Networks}, 
+  year={2025},
+  volume={},
+  number={},
+  pages={1-12},
+  keywords={Biological system modeling;Feature extraction;Chemicals;Bioinformatics;Accuracy;Training;Data models;Data mining;Transformers;Encoding;Explainable artificial intelligence;graph neural networks;language and molecules;large language models;molecular captioning;model interpretation;multimodal fusion},
+  doi={10.1109/JBHI.2025.3572910}}
 ```
